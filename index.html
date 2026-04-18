@@ -284,28 +284,49 @@
       const text = latestResult.textContent.trim();
       if (!text) return;
 
-      const styles = window.getComputedStyle(latestResult);
-      const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
-      const verticalPadding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
-
-      const availableWidth = latestResult.clientWidth - horizontalPadding;
-      const availableHeight = latestResult.clientHeight - verticalPadding;
-
-      if (availableWidth <= 0 || availableHeight <= 0) return;
-
-      let minSize = 24;
+      let minSize = 8;
       let maxSize = 220;
       let bestSize = minSize;
+      let bestLineHeight = 1;
+      let bestLetterSpacing = 0;
 
       while (minSize <= maxSize) {
         const mid = Math.floor((minSize + maxSize) / 2);
+
+        let lineHeight;
+        let letterSpacing;
+
+        if (mid >= 120) {
+          lineHeight = 1;
+          letterSpacing = 0.02;
+        } else if (mid >= 80) {
+          lineHeight = 0.96;
+          letterSpacing = 0.01;
+        } else if (mid >= 48) {
+          lineHeight = 0.92;
+          letterSpacing = 0;
+        } else if (mid >= 28) {
+          lineHeight = 0.88;
+          letterSpacing = -0.01;
+        } else if (mid >= 18) {
+          lineHeight = 0.84;
+          letterSpacing = -0.015;
+        } else {
+          lineHeight = 0.8;
+          letterSpacing = -0.02;
+        }
+
         latestResult.style.fontSize = mid + "px";
+        latestResult.style.lineHeight = String(lineHeight);
+        latestResult.style.letterSpacing = letterSpacing + "em";
 
         const fitsWidth = latestResult.scrollWidth <= latestResult.clientWidth;
         const fitsHeight = latestResult.scrollHeight <= latestResult.clientHeight;
 
         if (fitsWidth && fitsHeight) {
           bestSize = mid;
+          bestLineHeight = lineHeight;
+          bestLetterSpacing = letterSpacing;
           minSize = mid + 1;
         } else {
           maxSize = mid - 1;
@@ -313,6 +334,8 @@
       }
 
       latestResult.style.fontSize = bestSize + "px";
+      latestResult.style.lineHeight = String(bestLineHeight);
+      latestResult.style.letterSpacing = bestLetterSpacing + "em";
     }
 
     function drawNumbers() {
@@ -399,7 +422,7 @@
 
       const intervalId = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * candidates.length);
-        latestResult.textContent = candidates[randomIndex];
+        latestResult.textContent = String(candidates[randomIndex]);
         fitLatestResultText();
 
         if (Date.now() - rollStart >= 2000) {
